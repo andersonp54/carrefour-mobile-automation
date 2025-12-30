@@ -136,25 +136,6 @@ jobs:
         run: |
           lsof -ti tcp:${APPIUM_PORT} | xargs -r kill -9 || true
 
-      - name: Start Appium Server
-        run: |
-          # 1. Tenta atualizar o driver ignorando erros de versão major
-          npx appium driver update xcuitest --unsafe || true
-          
-          # 2. Inicia o servidor em background
-          npx appium --port ${{ env.APPIUM_PORT }} --address 127.0.0.1 --log appium.log &
-          
-          # 3. Aguarda o Appium ficar online (Versão compatível com macOS)
-          echo "Aguardando Appium na porta ${{ env.APPIUM_PORT }}..."
-          for i in {1..20}; do
-            if curl -s http://127.0.0.1:${{ env.APPIUM_PORT }}/status > /dev/null; then
-              echo "✅ Appium Server está pronto!"
-              break
-            fi
-            echo "Aguardando..."
-            sleep 5
-          done
-
       - name: Run WDIO tests (iOS)
         shell: bash
         run: |
