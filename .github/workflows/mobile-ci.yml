@@ -15,11 +15,53 @@ jobs:
       DEVICE_NAME: "iPhone 16 Pro Max"
       IOS_VERSION: "iOS 18.6"
       APPIUM_PORT: "4723"
-      CONFIGURATION: "Debug"
+      CONFIGURATION: "Release"
       # 👉 Se quiser forçar, pode definir aqui:
       # SCHEME: "Carrefour"
 
     steps:
+      - name: Checkout native-demo-app (Expo)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf native-demo-app
+          git clone --depth 1 https://github.com/webdriverio/native-demo-app.git native-demo-app
+
+      - name: Install native-demo-app deps
+        shell: bash
+        working-directory: native-demo-app
+        run: |
+          set -euo pipefail
+          npm ci
+
+      - name: Start Expo dev server (Metro) on port 3000
+        shell: bash
+        working-directory: native-demo-app
+        run: |
+          set -euo pipefail
+
+          # Expo CLI: --port define a porta do dev server; --localhost força servir só em localhost
+          # (bom para CI + simulador) :contentReference[oaicite:2]{index=2}
+          nohup npx expo start --port 3000 --localhost --non-interactive > ../expo.log 2>&1 &
+          echo $! > ../expo.pid
+
+      - name: Wait for Expo dev server
+        shell: bash
+        run: |
+          set -euo pipefail
+          # /status costuma responder quando o Metro está pronto
+          for i in {1..90}; do
+            if curl -fsS http://127.0.0.1:3000/status >/dev/null; then
+              echo "✅ Expo/Metro is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "❌ Expo/Metro did not start"
+          echo "---- expo.log ----"
+          cat expo.log || true
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -66,6 +108,9 @@ jobs:
 
           echo "IOS_APP_PATH=$PWD/$ACTUAL_APP_PATH" >> $GITHUB_ENV
           echo "✅ App v2.0.0 pronto em: $ACTUAL_APP_PATH"
+
+      - name: Install Appium Interceptor Plugin
+        run: npx appium plugin install --source=npm appium-interceptor-plugin
 
       - name: Create iOS Simulator (fixed model + iOS)
         shell: bash
@@ -130,3 +175,13 @@ jobs:
         with:
           name: allure-results
           path: allure-results
+
+      - name: Stop Expo dev server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f expo.pid ]; then
+            kill -9 "$(cat expo.pid)" || true
+          fi
+          echo "---- expo.log ----"
+          tail -n 200 expo.log || true
