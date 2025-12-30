@@ -79,6 +79,8 @@ jobs:
           sleep 6
 
       - name: Run WDIO tests (iOS)
+          echo "Killing anything on port ${APPIUM_PORT:-4723}..."
+          lsof -ti tcp:${APPIUM_PORT:-4723} | xargs -r kill -9 || true
         run: |
           npx wdio run wdio.conf.js
         env:
