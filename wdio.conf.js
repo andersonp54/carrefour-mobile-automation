@@ -1,5 +1,8 @@
-
 /** @type {import('@wdio/types').Options.Testrunner} */
+
+import path from 'node:path';
+import fs from 'node:fs';
+
 let initialSetupDone = false;
 
 const iosAppPath = process.env.IOS_APP_PATH
