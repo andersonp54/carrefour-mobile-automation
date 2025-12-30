@@ -20,7 +20,9 @@ export const config = {
     exclude: [
     ],
     maxInstances: 1,
-
+    connectionRetryTimeout: 240000, // 4 minutos (essencial para iOS no CI)
+    connectionRetryCount: 2,
+    
     capabilities: [{
         maxInstances: 1,
         platformName: 'iOS',
@@ -34,7 +36,7 @@ export const config = {
         "appium:udid": process.env.SIMULATOR_UDID,
         'appium:wdaLaunchTimeout': 240000,
         'appium:wdaConnectionTimeout': 240000,
-        'appium:newCommandTimeout': 180,
+        'appium:newCommandTimeout': 300,
         'appium:useNewWDA': true,
         'appium:showXcodeLog': true,
         'appium:shouldTerminateApp': true,
