@@ -136,6 +136,14 @@ jobs:
         run: |
           lsof -ti tcp:${APPIUM_PORT} | xargs -r kill -9 || true
 
+      - name: Verify Simulator state
+        shell: bash
+        run: |
+          xcrun simctl list devices | grep "$SIMULATOR_UDID" || true
+          xcrun simctl getenv "$SIMULATOR_UDID" HOME || true
+          open -a Simulator || true
+          sleep 5
+
       - name: Run WDIO tests (iOS)
         shell: bash
         run: |

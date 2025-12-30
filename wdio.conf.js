@@ -19,8 +19,8 @@ export const config = {
     specs: ['./tests/**/*.spec.js'],
     exclude: [
     ],
-
     maxInstances: 1,
+
     capabilities: [{
         maxInstances: 1,
         platformName: 'iOS',
@@ -28,22 +28,28 @@ export const config = {
         'appium:platformVersion': '18.6',
         'appium:automationName': 'XCUITest',
         'appium:app': iosAppPath,
-        'appium:newCommandTimeout': 120,
         'appium:autoAcceptAlerts': false,
         'appium:disableAutomaticScreenshots': true,
         'appium:connectHardwareKeyboard': false,
         "appium:udid": process.env.SIMULATOR_UDID,
+        'appium:wdaLaunchTimeout': 240000,
+        'appium:wdaConnectionTimeout': 240000,
+        'appium:newCommandTimeout': 180,
+        'appium:useNewWDA': true,
+        'appium:showXcodeLog': true,
+        'appium:shouldTerminateApp': true,
+
     }],
     logLevel: 'info',
     bail: 0,
     waitforTimeout: 10000,
-    connectionRetryTimeout: 240000,
-    connectionRetryCount: 3,
-    services: [
-        ['appium', {
-            command: 'appium'
-        }]
-    ],
+    services: [['appium', {
+        args: {
+            port: Number(process.env.APPIUM_PORT || 4723),
+            'base-path': '/',
+            'log-level': 'debug'
+        }
+    }]],
     framework: 'mocha',
     reporters: [
         'spec',
