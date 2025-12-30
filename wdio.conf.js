@@ -27,7 +27,7 @@ export const config = {
         maxInstances: 1,
         platformName: 'iOS',
         'appium:deviceName': process.env.DEVICE_NAME || 'iPhone 16',
-        'appium:platformVersion': '18.1',
+        'appium:platformVersion': '18.6',
         'appium:automationName': 'XCUITest',
         'appium:app': iosAppPath,
         'appium:autoAcceptAlerts': false,
