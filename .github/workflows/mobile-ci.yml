@@ -15,6 +15,9 @@ jobs:
       DEVICE_NAME: "iPhone 16 Pro Max"
       IOS_VERSION: "iOS 18.6"
       APPIUM_PORT: "4723"
+      CONFIGURATION: "Debug"
+      # 👉 Se quiser forçar, pode definir aqui:
+      # SCHEME: "Carrefour"
 
     steps:
       - name: Checkout repository
@@ -35,21 +38,45 @@ jobs:
           xcrun simctl list devicetypes
           xcrun simctl list devices available
 
-      # ✅ OPÇÃO A: Build do .app para Simulator e export IOS_APP_PATH
+      # ✅ OPÇÃO A — Build do .app com AUTO-DETECT
       - name: Build iOS app for Simulator (.app)
         shell: bash
         run: |
           set -euo pipefail
 
-          # ✅ AJUSTE AQUI (um dos dois):
-          WORKSPACE="ios/MyApp.xcworkspace"   # ex: ios/Carrefour.xcworkspace (ou deixe vazio e use PROJECT)
-          PROJECT=""                          # ex: ios/Carrefour.xcodeproj
-          SCHEME="MyApp"                      # ex: Carrefour
-          CONFIGURATION="Debug"
-
           DERIVED_DATA="$RUNNER_TEMP/DerivedData"
 
+          echo "🔎 Searching for .xcworkspace or .xcodeproj..."
+          WORKSPACE="$(find . -maxdepth 6 -name "*.xcworkspace" | head -n 1 || true)"
+          PROJECT="$(find . -maxdepth 6 -name "*.xcodeproj" | head -n 1 || true)"
+
+          if [ -z "$WORKSPACE" ] && [ -z "$PROJECT" ]; then
+            echo "❌ No .xcworkspace or .xcodeproj found"
+            find . -maxdepth 4 -print
+            exit 1
+          fi
+
+          echo "✅ WORKSPACE=${WORKSPACE:-<none>}"
+          echo "✅ PROJECT=${PROJECT:-<none>}"
+
+          # 🔍 Detect SCHEME se não vier do env
+          if [ -z "${SCHEME:-}" ]; then
+            echo "🔎 Detecting scheme..."
+            if [ -n "$WORKSPACE" ]; then
+              SCHEME="$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/{f=1;next} f && NF{print $1; exit}')"
+            else
+              SCHEME="$(xcodebuild -list -project "$PROJECT" | awk '/Schemes:/{f=1;next} f && NF{print $1; exit}')"
+            fi
+          fi
+
+          if [ -z "$SCHEME" ]; then
+            echo "❌ Could not detect scheme"
+            exit 1
+          fi
+
+          echo "✅ Using SCHEME=$SCHEME"
           echo "Building iOS simulator app..."
+
           if [ -n "$WORKSPACE" ]; then
             xcodebuild \
               -workspace "$WORKSPACE" \
@@ -68,12 +95,12 @@ jobs:
               build
           fi
 
-          echo "✅ Build done. Searching for .app..."
+          echo "🔎 Searching for .app..."
           APP_PATH="$(find "$DERIVED_DATA/Build/Products" -maxdepth 4 -type d -name "*.app" | head -n 1)"
 
           if [ -z "$APP_PATH" ]; then
-            echo "❌ Could not find .app inside DerivedData/Build/Products"
-            find "$DERIVED_DATA/Build/Products" -maxdepth 6 -print || true
+            echo "❌ .app not found"
+            find "$DERIVED_DATA/Build/Products" -maxdepth 6 -print
             exit 1
           fi
 
@@ -85,90 +112,60 @@ jobs:
         run: |
           set -euo pipefail
 
-          # ✅ Runtime line format:
-          # iOS 18.6 (18.6 - 22G86) - com.apple.CoreSimulator.SimRuntime.iOS-18-6
-          RUNTIME_ID=$(xcrun simctl list runtimes \
-            | grep "^${IOS_VERSION} " \
-            | awk -F' - ' '{print $NF}' \
-            | head -n 1)
+          RUNTIME_ID=$(xcrun simctl list runtimes | grep "^${IOS_VERSION} " | awk -F' - ' '{print $NF}' | head -n 1)
+          DEVICE_TYPE_ID=$(xcrun simctl list devicetypes | grep "^${DEVICE_NAME} " | awk -F'[()]' '{print $2}' | head -n 1)
 
-          if [ -z "$RUNTIME_ID" ]; then
-            echo "❌ Runtime não encontrado para ${IOS_VERSION}"
+          if [ -z "$RUNTIME_ID" ] || [ -z "$DEVICE_TYPE_ID" ]; then
+            echo "❌ Runtime or DeviceType not found"
             exit 1
           fi
-
-          # ✅ DeviceType line format:
-          # iPhone 16 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max)
-          DEVICE_TYPE_ID=$(xcrun simctl list devicetypes \
-            | grep "^${DEVICE_NAME} " \
-            | awk -F'[()]' '{print $2}' \
-            | head -n 1)
-
-          if [ -z "$DEVICE_TYPE_ID" ]; then
-            echo "❌ DeviceType não encontrado para ${DEVICE_NAME}"
-            exit 1
-          fi
-
-          echo "✅ Using runtime: $RUNTIME_ID"
-          echo "✅ Using device type: $DEVICE_TYPE_ID"
 
           UDID=$(xcrun simctl create "${DEVICE_NAME} CI" "$DEVICE_TYPE_ID" "$RUNTIME_ID")
-          echo "✅ Simulator criado: $UDID"
           echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
 
       - name: Boot iOS Simulator
         shell: bash
         run: |
-          set -euo pipefail
-          # (Opcional) garantir que não tem estado antigo
           xcrun simctl shutdown "$SIMULATOR_UDID" || true
           xcrun simctl erase "$SIMULATOR_UDID" || true
-
           xcrun simctl boot "$SIMULATOR_UDID" || true
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
-      # ✅ Mata qualquer coisa na porta antes de subir o Appium
       - name: Free Appium port
         shell: bash
         run: |
-          set -euo pipefail
-          echo "Killing anything on port ${APPIUM_PORT:-4723}..."
-          lsof -ti tcp:${APPIUM_PORT:-4723} | xargs -r kill -9 || true
+          lsof -ti tcp:${APPIUM_PORT} | xargs -r kill -9 || true
 
       - name: Start Appium
         shell: bash
         run: |
-          set -euo pipefail
           npx appium --port "$APPIUM_PORT" --log-level warn &
           sleep 6
 
       - name: Run WDIO tests (iOS)
         shell: bash
         run: |
-          set -euo pipefail
           echo "IOS_APP_PATH=$IOS_APP_PATH"
           echo "SIMULATOR_UDID=$SIMULATOR_UDID"
-          ls -la "$IOS_APP_PATH" || true
-
+          ls -la "$IOS_APP_PATH"
           npx wdio run wdio.conf.js
         env:
-          SIMULATOR_UDID: ${{ env.SIMULATOR_UDID }}
           IOS_APP_PATH: ${{ env.IOS_APP_PATH }}
+          SIMULATOR_UDID: ${{ env.SIMULATOR_UDID }}
           NODE_OPTIONS: ""
 
       - name: Generate Allure report (HTML)
         if: always()
-        run: |
-          npx allure generate allure-results --clean -o allure-report
+        run: npx allure generate allure-results --clean -o allure-report
 
-      - name: Upload Allure report (artifact)
+      - name: Upload Allure report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report
 
-      - name: Upload Allure results (artifact)
+      - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
