@@ -146,13 +146,18 @@ jobs:
 
       - name: Start Appium Server
         run: |
-          npm install -g appium
-          appium driver install xcuitest
-          # Inicia o appium em background e redireciona log para debug
-          appium --port ${{ env.APPIUM_PORT }} --log appium.log &
+          # 1. Tenta instalar apenas se não existir; se existir, tenta atualizar
+          # O "|| true" garante que o workflow continue mesmo se houver erro nesta etapa
+          npx appium driver install xcuitest || npx appium driver update xcuitest || true
           
-          # Aguarda o Appium ficar online (Health Check)
-          timeout 60s bash -c 'until curl -s http://127.0.0.1:${{ env.APPIUM_PORT }}/status; do echo "Aguardando Appium..."; sleep 5; done'
+          # 2. Inicia o servidor em background usando npx (usa a versão local do projeto)
+          # Appium 2.x/3.x usa o path '/' por padrão
+          npx appium --port ${{ env.APPIUM_PORT }} --address 127.0.0.1 --log appium.log &
+          
+          # 3. Aguarda o Appium ficar online (Health Check)
+          echo "Aguardando Appium na porta ${{ env.APPIUM_PORT }}..."
+          timeout 60s bash -c 'until curl -s http://127.0.0.1:${{ env.APPIUM_PORT }}/status; do sleep 5; done'
+          echo "✅ Appium Server está pronto!"
 
       - name: Run WDIO tests (iOS)
         shell: bash
