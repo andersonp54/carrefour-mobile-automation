@@ -41,7 +41,7 @@ jobs:
           # iOS 18.6 (18.6 - 22G86) - com.apple.CoreSimulator.SimRuntime.iOS-18-6
           RUNTIME_ID=$(xcrun simctl list runtimes \
             | grep "^${IOS_VERSION} " \
-            | awk -F' - ' '{print $2}' \
+            | awk -F' - ' '{print $NF}' \
             | head -n 1)
 
           if [ -z "$RUNTIME_ID" ]; then
