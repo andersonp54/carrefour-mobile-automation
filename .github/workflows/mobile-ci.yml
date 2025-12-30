@@ -142,7 +142,7 @@ jobs:
           echo "IOS_APP_PATH=$IOS_APP_PATH"
           echo "SIMULATOR_UDID=$SIMULATOR_UDID"
           ls -la "$IOS_APP_PATH"
-          npx wdio run wdio.conf.js
+          npx wdio run wdio.conf.js --maxInstances 1
         env:
           IOS_APP_PATH: ${{ env.IOS_APP_PATH }}
           SIMULATOR_UDID: ${{ env.SIMULATOR_UDID }}

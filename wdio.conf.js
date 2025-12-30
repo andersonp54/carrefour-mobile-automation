@@ -37,7 +37,7 @@ export const config = {
     logLevel: 'info',
     bail: 0,
     waitforTimeout: 10000,
-    connectionRetryTimeout: 120000,
+    connectionRetryTimeout: 240000,
     connectionRetryCount: 3,
     services: [
         ['appium', {
