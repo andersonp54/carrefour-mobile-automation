@@ -38,74 +38,21 @@ jobs:
           xcrun simctl list devicetypes
           xcrun simctl list devices available
 
-      # ✅ OPÇÃO A — Build do .app com AUTO-DETECT
-      - name: Build iOS app for Simulator (.app)
-        shell: bash
+      - name: Download WebDriverIO Demo App v2.0.0
         run: |
-          set -euo pipefail
-
-          DERIVED_DATA="$RUNNER_TEMP/DerivedData"
-
-          echo "🔎 Searching for .xcworkspace or .xcodeproj..."
-          WORKSPACE="$(find . -maxdepth 6 -name "*.xcworkspace" | head -n 1 || true)"
-          PROJECT="$(find . -maxdepth 6 -name "*.xcodeproj" | head -n 1 || true)"
-
-          if [ -z "$WORKSPACE" ] && [ -z "$PROJECT" ]; then
-            echo "❌ No .xcworkspace or .xcodeproj found"
-            find . -maxdepth 4 -print
-            exit 1
-          fi
-
-          echo "✅ WORKSPACE=${WORKSPACE:-<none>}"
-          echo "✅ PROJECT=${PROJECT:-<none>}"
-
-          # 🔍 Detect SCHEME se não vier do env
-          if [ -z "${SCHEME:-}" ]; then
-            echo "🔎 Detecting scheme..."
-            if [ -n "$WORKSPACE" ]; then
-              SCHEME="$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/{f=1;next} f && NF{print $1; exit}')"
-            else
-              SCHEME="$(xcodebuild -list -project "$PROJECT" | awk '/Schemes:/{f=1;next} f && NF{print $1; exit}')"
-            fi
-          fi
-
-          if [ -z "$SCHEME" ]; then
-            echo "❌ Could not detect scheme"
-            exit 1
-          fi
-
-          echo "✅ Using SCHEME=$SCHEME"
-          echo "Building iOS simulator app..."
-
-          if [ -n "$WORKSPACE" ]; then
-            xcodebuild \
-              -workspace "$WORKSPACE" \
-              -scheme "$SCHEME" \
-              -configuration "$CONFIGURATION" \
-              -sdk iphonesimulator \
-              -derivedDataPath "$DERIVED_DATA" \
-              build
-          else
-            xcodebuild \
-              -project "$PROJECT" \
-              -scheme "$SCHEME" \
-              -configuration "$CONFIGURATION" \
-              -sdk iphonesimulator \
-              -derivedDataPath "$DERIVED_DATA" \
-              build
-          fi
-
-          echo "🔎 Searching for .app..."
-          APP_PATH="$(find "$DERIVED_DATA/Build/Products" -maxdepth 4 -type d -name "*.app" | head -n 1)"
-
-          if [ -z "$APP_PATH" ]; then
-            echo "❌ .app not found"
-            find "$DERIVED_DATA/Build/Products" -maxdepth 6 -print
-            exit 1
-          fi
-
-          echo "✅ Found app: $APP_PATH"
-          echo "IOS_APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+          mkdir -p apps/ios
+          # Baixa a versão específica v2.0.0 para simulador
+          curl -L github.com -o apps/ios/wdiodemoapp.zip
+          
+          # Extrai o conteúdo
+          unzip apps/ios/wdiodemoapp.zip -d apps/ios/
+          
+          # Encontra o caminho do .app e salva na variável de ambiente do GitHub
+          # O find garante que pegamos o caminho correto independente da estrutura do zip
+          ACTUAL_APP_PATH=$(find apps/ios -name "*.app" | head -n 1)
+          echo "IOS_APP_PATH=$PWD/$ACTUAL_APP_PATH" >> $GITHUB_ENV
+          
+          echo "✅ App v2.0.0 pronto em: $ACTUAL_APP_PATH"
 
       - name: Create iOS Simulator (fixed model + iOS)
         shell: bash
