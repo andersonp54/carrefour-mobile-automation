@@ -1,5 +1,6 @@
 
 /** @type {import('@wdio/types').Options.Testrunner} */
+let initialSetupDone = false;
 
 
 export const config = {
@@ -9,7 +10,7 @@ export const config = {
     exclude: [
     ],
 
-    maxInstances: 10,
+    maxInstances: 1,
     capabilities: [{
         platformName: 'iOS',
         'appium:deviceName': 'iPhone 16 Pro Max',
@@ -20,6 +21,7 @@ export const config = {
         'appium:autoAcceptAlerts': false,
         'appium:disableAutomaticScreenshots': true,
         'appium:connectHardwareKeyboard': false,
+
     }],
     logLevel: 'info',
     bail: 0,
@@ -46,11 +48,51 @@ export const config = {
         timeout: 6000000
     },
 
+    before: async function () {
+        if (initialSetupDone) return;
+        initialSetupDone = true;
+
+        try {
+            // Seleciona localhost para acesso inicial
+            const devServersTitle = await $(
+                '-ios predicate string:type == "XCUIElementTypeStaticText" AND name CONTAINS "DEVELOPMENT SERVERS"'
+            );
+
+            await devServersTitle.waitForExist({ timeout: 5000 }).catch(() => { });
+
+            if (await devServersTitle.isExisting()) {
+                const cell = await $('//XCUIElementTypeButton[@name="http://localhost:8081"]');
+                await cell.waitForExist({ timeout: 15000 });
+                await cell.click();
+            }
+
+            // Fecha Developer Menu
+            const devMenuText = await $(
+                '-ios predicate string:type == "XCUIElementTypeStaticText" AND name CONTAINS "This is the developer menu"'
+            );
+
+            await devMenuText.waitForExist({ timeout: 5000 }).catch(() => { });
+
+            if (await devMenuText.isExisting()) {
+                const closeBtn = await $('//XCUIElementTypeButton[@name="xmark"]');
+                await closeBtn.waitForExist({ timeout: 15000 });
+                if (await closeBtn.isExisting()) {
+                    await closeBtn.click();
+                }
+            }
+
+        } catch (e) {
+            console.warn('Setup inicial ignorado:', e.message);
+        }
+    },
+
     afterTest: async function (test, context, { error, passed }) {
         if (!passed) {
             await browser.takeScreenshot();
         }
     }
+
+
 
 
 

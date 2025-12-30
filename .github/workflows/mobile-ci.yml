@@ -1,58 +1,111 @@
-name: Mobile iOS Automation
+name: Mobile iOS Automation (WDIO + Appium + Allure)
 
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 jobs:
   ios-tests:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 70
+
+    env:
+      DEVICE_NAME: "iPhone 16 Pro Max"
+      IOS_VERSION: "iOS 18.6"
+      APPIUM_PORT: "4723"
 
     steps:
+      # Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
 
+      # Dependências
       - name: Install dependencies
         run: npm i
 
-      - name: List iOS simulators
-        run: xcrun simctl list devices available
-
-      - name: Boot iOS simulator
+      - name: List iOS runtimes and devices
         run: |
-          DEVICE_UDID=$(xcrun simctl list devices available | grep -m 1 "iPhone" | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/')
-          echo "Using simulator: $DEVICE_UDID"
-          xcrun simctl boot "$DEVICE_UDID" || true
-          xcrun simctl bootstatus "$DEVICE_UDID" -b
+          xcrun simctl list runtimes
+          xcrun simctl list devicetypes
+          xcrun simctl list devices available
 
+      # Criar simulador FIXO (iPhone 16 Pro Max / iOS 18.6)
+      - name: Create iOS Simulator
+        run: |
+          # Resolve runtime (ex: com.apple.CoreSimulator.SimRuntime.iOS-18-6)
+          RUNTIME_ID=$(xcrun simctl list runtimes \
+            | grep "${IOS_VERSION}" \
+            | grep -Eo 'com.apple.CoreSimulator.SimRuntime.iOS-[0-9-]+' \
+            | head -n 1)
+
+          if [ -z "$RUNTIME_ID" ]; then
+            echo "❌ Runtime não encontrado para ${IOS_VERSION}"
+            exit 1
+          fi
+
+          # Resolve device type (ex: com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max)
+          DEVICE_TYPE_ID=$(xcrun simctl list devicetypes \
+            | grep "${DEVICE_NAME}" \
+            | grep -Eo 'com.apple.CoreSimulator.SimDeviceType.iPhone-[^ ]+' \
+            | head -n 1)
+
+          if [ -z "$DEVICE_TYPE_ID" ]; then
+            echo "❌ DeviceType não encontrado para ${DEVICE_NAME}"
+            exit 1
+          fi
+
+          # Cria simulador e exporta UDID
+          UDID=$(xcrun simctl create "${DEVICE_NAME} CI" "$DEVICE_TYPE_ID" "$RUNTIME_ID")
+          echo "✅ Simulator criado: $UDID"
+          echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+
+      # Bootar simulador
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "$SIMULATOR_UDID" || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+      # Subir Appium
       - name: Start Appium
         run: |
-          npx appium --log-level error &
-          sleep 5
+          npx appium --port $APPIUM_PORT --log-level warn &
+          sleep 6
 
+      # Rodar WDIO
       - name: Run WDIO tests (iOS)
         run: |
           npx wdio run wdio.conf.js
         env:
+          SIMULATOR_UDID: ${{ env.SIMULATOR_UDID }}
           NODE_OPTIONS: ""
 
+      # Gerar Allure HTML
       - name: Generate Allure report
         if: always()
         run: |
           npx allure generate allure-results --clean -o allure-report
 
-      - name: Upload Allure Report
+      # Upload Allure HTML
+      - name: Upload Allure report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report
+
+      # Upload resultados brutos (opcional)
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
