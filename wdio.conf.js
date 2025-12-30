@@ -22,6 +22,7 @@ export const config = {
 
     maxInstances: 1,
     capabilities: [{
+        maxInstances: 1,
         platformName: 'iOS',
         'appium:deviceName': process.env.DEVICE_NAME || 'iPhone 16 Pro Max',
         'appium:platformVersion': '18.6',
