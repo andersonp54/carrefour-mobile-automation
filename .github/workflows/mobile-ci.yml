@@ -13,7 +13,7 @@ jobs:
 
     env:
       DEVICE_NAME: "iPhone 16 Pro Max"
-      IOS_VERSION: "iOS 18.6"
+      IOS_VERSION: "iOS 18.1"
       APPIUM_PORT: "4723"
       CONFIGURATION: "Debug"
       # 👉 Se quiser forçar, pode definir aqui:

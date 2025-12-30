@@ -22,21 +22,21 @@ export const config = {
     maxInstances: 1,
     connectionRetryTimeout: 240000, // 4 minutos (essencial para iOS no CI)
     connectionRetryCount: 2,
-    
+
     capabilities: [{
         maxInstances: 1,
         platformName: 'iOS',
-        'appium:deviceName': process.env.DEVICE_NAME || 'iPhone 16 Pro Max',
-        'appium:platformVersion': '18.6',
+        'appium:deviceName': process.env.DEVICE_NAME || 'iPhone 16',
+        'appium:platformVersion': '18.1',
         'appium:automationName': 'XCUITest',
         'appium:app': iosAppPath,
         'appium:autoAcceptAlerts': false,
         'appium:disableAutomaticScreenshots': true,
         'appium:connectHardwareKeyboard': false,
         "appium:udid": process.env.SIMULATOR_UDID,
-        'appium:wdaLaunchTimeout': 240000,
-        'appium:wdaConnectionTimeout': 240000,
-        'appium:newCommandTimeout': 300,
+        'appium:wdaLaunchTimeout': 400000,
+        'appium:wdaConnectionTimeout': 400000,
+        'appium:newCommandTimeout': 400000,
         'appium:useNewWDA': true,
         'appium:showXcodeLog': true,
         'appium:shouldTerminateApp': true,
@@ -45,13 +45,17 @@ export const config = {
     logLevel: 'info',
     bail: 0,
     waitforTimeout: 10000,
-    services: [['appium', {
-        args: {
-            port: Number(process.env.APPIUM_PORT || 4723),
-            'base-path': '/',
-            'log-level': 'debug'
-        }
-    }]],
+    services: [
+        ['appium', {
+            args: {
+                address: '127.0.0.1',
+                port: 4723,
+                // Appium 2.x não usa mais base-path /wd/hub por padrão
+                basePath: '/'
+            },
+            command: 'appium'
+        }]
+    ],
     framework: 'mocha',
     reporters: [
         'spec',
