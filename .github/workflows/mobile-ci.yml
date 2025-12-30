@@ -35,8 +35,56 @@ jobs:
           xcrun simctl list devicetypes
           xcrun simctl list devices available
 
-      - name: Create iOS Simulator (fixed model + iOS)
+      # ✅ OPÇÃO A: Build do .app para Simulator e export IOS_APP_PATH
+      - name: Build iOS app for Simulator (.app)
+        shell: bash
         run: |
+          set -euo pipefail
+
+          # ✅ AJUSTE AQUI (um dos dois):
+          WORKSPACE="ios/MyApp.xcworkspace"   # ex: ios/Carrefour.xcworkspace (ou deixe vazio e use PROJECT)
+          PROJECT=""                          # ex: ios/Carrefour.xcodeproj
+          SCHEME="MyApp"                      # ex: Carrefour
+          CONFIGURATION="Debug"
+
+          DERIVED_DATA="$RUNNER_TEMP/DerivedData"
+
+          echo "Building iOS simulator app..."
+          if [ -n "$WORKSPACE" ]; then
+            xcodebuild \
+              -workspace "$WORKSPACE" \
+              -scheme "$SCHEME" \
+              -configuration "$CONFIGURATION" \
+              -sdk iphonesimulator \
+              -derivedDataPath "$DERIVED_DATA" \
+              build
+          else
+            xcodebuild \
+              -project "$PROJECT" \
+              -scheme "$SCHEME" \
+              -configuration "$CONFIGURATION" \
+              -sdk iphonesimulator \
+              -derivedDataPath "$DERIVED_DATA" \
+              build
+          fi
+
+          echo "✅ Build done. Searching for .app..."
+          APP_PATH="$(find "$DERIVED_DATA/Build/Products" -maxdepth 4 -type d -name "*.app" | head -n 1)"
+
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ Could not find .app inside DerivedData/Build/Products"
+            find "$DERIVED_DATA/Build/Products" -maxdepth 6 -print || true
+            exit 1
+          fi
+
+          echo "✅ Found app: $APP_PATH"
+          echo "IOS_APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+
+      - name: Create iOS Simulator (fixed model + iOS)
+        shell: bash
+        run: |
+          set -euo pipefail
+
           # ✅ Runtime line format:
           # iOS 18.6 (18.6 - 22G86) - com.apple.CoreSimulator.SimRuntime.iOS-18-6
           RUNTIME_ID=$(xcrun simctl list runtimes \
@@ -66,25 +114,46 @@ jobs:
 
           UDID=$(xcrun simctl create "${DEVICE_NAME} CI" "$DEVICE_TYPE_ID" "$RUNTIME_ID")
           echo "✅ Simulator criado: $UDID"
-          echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
+          echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
 
       - name: Boot iOS Simulator
+        shell: bash
         run: |
+          set -euo pipefail
+          # (Opcional) garantir que não tem estado antigo
+          xcrun simctl shutdown "$SIMULATOR_UDID" || true
+          xcrun simctl erase "$SIMULATOR_UDID" || true
+
           xcrun simctl boot "$SIMULATOR_UDID" || true
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
-      - name: Start Appium
+      # ✅ Mata qualquer coisa na porta antes de subir o Appium
+      - name: Free Appium port
+        shell: bash
         run: |
-          npx appium --port $APPIUM_PORT --log-level warn &
+          set -euo pipefail
+          echo "Killing anything on port ${APPIUM_PORT:-4723}..."
+          lsof -ti tcp:${APPIUM_PORT:-4723} | xargs -r kill -9 || true
+
+      - name: Start Appium
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx appium --port "$APPIUM_PORT" --log-level warn &
           sleep 6
 
       - name: Run WDIO tests (iOS)
-          echo "Killing anything on port ${APPIUM_PORT:-4723}..."
-          lsof -ti tcp:${APPIUM_PORT:-4723} | xargs -r kill -9 || true
+        shell: bash
         run: |
+          set -euo pipefail
+          echo "IOS_APP_PATH=$IOS_APP_PATH"
+          echo "SIMULATOR_UDID=$SIMULATOR_UDID"
+          ls -la "$IOS_APP_PATH" || true
+
           npx wdio run wdio.conf.js
         env:
           SIMULATOR_UDID: ${{ env.SIMULATOR_UDID }}
+          IOS_APP_PATH: ${{ env.IOS_APP_PATH }}
           NODE_OPTIONS: ""
 
       - name: Generate Allure report (HTML)
