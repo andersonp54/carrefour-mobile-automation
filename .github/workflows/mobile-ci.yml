@@ -41,17 +41,30 @@ jobs:
       - name: Download WebDriverIO Demo App v2.0.0
         run: |
           mkdir -p apps/ios
-          # Baixa a versão específica v2.0.0 para simulador
-          curl -L github.com -o apps/ios/wdiodemoapp.zip
+          # URL direta para o binário da release v2.0.0
+          URL="https://github.com/webdriverio/native-demo-app/releases/download/v2.0.0/ios.simulator.wdio.native.app.v2.0.0.zip"
           
-          # Extrai o conteúdo
+          echo "Baixando app de: $URL"
+          curl -L "$URL" -o apps/ios/wdiodemoapp.zip
+          
+          # Verifica se o arquivo foi baixado e tem tamanho (não é um HTML de erro)
+          if [ $(stat -f%z apps/ios/wdiodemoapp.zip) -lt 100000 ]; then
+            echo "❌ Erro: O arquivo baixado é muito pequeno. Verifique a URL."
+            exit 1
+          fi
+
+          echo "Extraindo app..."
           unzip apps/ios/wdiodemoapp.zip -d apps/ios/
           
-          # Encontra o caminho do .app e salva na variável de ambiente do GitHub
-          # O find garante que pegamos o caminho correto independente da estrutura do zip
+          # Define o caminho para o ambiente do GitHub
           ACTUAL_APP_PATH=$(find apps/ios -name "*.app" | head -n 1)
-          echo "IOS_APP_PATH=$PWD/$ACTUAL_APP_PATH" >> $GITHUB_ENV
           
+          if [ -z "$ACTUAL_APP_PATH" ]; then
+            echo "❌ Erro: Arquivo .app não encontrado após extração."
+            exit 1
+          fi
+
+          echo "IOS_APP_PATH=$PWD/$ACTUAL_APP_PATH" >> $GITHUB_ENV
           echo "✅ App v2.0.0 pronto em: $ACTUAL_APP_PATH"
 
       - name: Create iOS Simulator (fixed model + iOS)
