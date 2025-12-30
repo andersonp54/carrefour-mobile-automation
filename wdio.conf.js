@@ -21,7 +21,7 @@ export const config = {
         'appium:autoAcceptAlerts': false,
         'appium:disableAutomaticScreenshots': true,
         'appium:connectHardwareKeyboard': false,
-
+        "appium:udid": process.env.SIMULATOR_UDID,
     }],
     logLevel: 'info',
     bail: 0,
