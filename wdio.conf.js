@@ -78,23 +78,21 @@ export const config = {
         try {
             // Seleciona localhost para acesso inicial
             const devServersTitle = await $(
-                '-ios predicate string:type == "XCUIElementTypeStaticText" AND name CONTAINS "DEVELOPMENT SERVERS"'
+                '-ios predicate string:label CONTAINS "DEVELOPMENT SERVERS"'
             );
 
-            await devServersTitle.waitForExist({ timeout: 5000 }).catch(() => { });
+            await devServersTitle.waitForExist({ timeout: 5000 });
 
             if (await devServersTitle.isExisting()) {
-                const cell = await $('//XCUIElementTypeButton[@name="http://localhost:8081"]');
+                const cell = await $('-ios class chain:**/XCUIElementTypeButton[`name == "http://localhost:8081"`]');
                 await cell.waitForExist({ timeout: 15000 });
                 await cell.click();
             }
 
             // Fecha Developer Menu
-            const devMenuText = await $(
-                '-ios predicate string:type == "XCUIElementTypeStaticText" AND name CONTAINS "This is the developer menu"'
-            );
+            const devMenuText = await $('-ios class chain:**/XCUIElementTypeStaticText[$name CONTAINS "This is the developer menu"$]');
 
-            await devMenuText.waitForExist({ timeout: 5000 }).catch(() => { });
+            await devMenuText.waitForExist({ timeout: 5000 });
 
             if (await devMenuText.isExisting()) {
                 const closeBtn = await $('//XCUIElementTypeButton[@name="xmark"]');
