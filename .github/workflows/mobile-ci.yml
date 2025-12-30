@@ -136,12 +136,6 @@ jobs:
         run: |
           lsof -ti tcp:${APPIUM_PORT} | xargs -r kill -9 || true
 
-      - name: Start Appium
-        shell: bash
-        run: |
-          npx appium --port "$APPIUM_PORT" --log-level warn &
-          sleep 6
-
       - name: Run WDIO tests (iOS)
         shell: bash
         run: |
