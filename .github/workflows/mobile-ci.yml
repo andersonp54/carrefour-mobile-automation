@@ -23,7 +23,6 @@ jobs:
       - name: Checkout native-demo-app (Expo)
         shell: bash
         run: |
-          set -euo pipefail
           rm -rf native-demo-app
           git clone --depth 1 https://github.com/webdriverio/native-demo-app.git native-demo-app
 
@@ -31,19 +30,13 @@ jobs:
         shell: bash
         working-directory: native-demo-app
         run: |
-          set -euo pipefail
-          npm ci
+          npm i
 
       - name: Start Expo dev server (Metro) on port 4723
         shell: bash
         working-directory: native-demo-app
         run: |
-          set -euo pipefail
-
-          # Expo CLI: --port define a porta do dev server; --localhost força servir só em localhost
-          # (bom para CI + simulador) :contentReference[oaicite:2]{index=2}
-          nohup npx expo start --port 4723 --localhost --non-interactive > ../expo.log 2>&1 &
-          echo $! > ../expo.pid
+          npx expo start
 
       - name: Wait for Expo dev server
         shell: bash
