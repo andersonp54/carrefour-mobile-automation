@@ -109,9 +109,6 @@ jobs:
           echo "IOS_APP_PATH=$PWD/$ACTUAL_APP_PATH" >> $GITHUB_ENV
           echo "✅ App v2.0.0 pronto em: $ACTUAL_APP_PATH"
 
-      - name: Install Appium Interceptor Plugin
-        run: npx appium plugin install --source=npm appium-interceptor-plugin
-
       - name: Create iOS Simulator (fixed model + iOS)
         shell: bash
         run: |
