@@ -2,6 +2,13 @@
 /** @type {import('@wdio/types').Options.Testrunner} */
 let initialSetupDone = false;
 
+const iosAppPath = process.env.IOS_APP_PATH
+    ? path.resolve(process.env.IOS_APP_PATH)
+    : path.resolve(process.cwd(), 'apps/ios/wdiodemoapp.app');
+
+if (!fs.existsSync(iosAppPath)) {
+    throw new Error(`iOS app not found at: ${iosAppPath}`);
+}
 
 export const config = {
     runner: 'local',
@@ -13,10 +20,10 @@ export const config = {
     maxInstances: 1,
     capabilities: [{
         platformName: 'iOS',
-        'appium:deviceName': 'iPhone 16 Pro Max',
+        'appium:deviceName': process.env.DEVICE_NAME || 'iPhone 16 Pro Max',
         'appium:platformVersion': '18.6',
         'appium:automationName': 'XCUITest',
-        'appium:app': `${process.cwd()}/apps/ios/wdiodemoapp.app`,
+        'appium:app': iosAppPath,
         'appium:newCommandTimeout': 120,
         'appium:autoAcceptAlerts': false,
         'appium:disableAutomaticScreenshots': true,
