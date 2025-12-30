@@ -136,28 +136,24 @@ jobs:
         run: |
           lsof -ti tcp:${APPIUM_PORT} | xargs -r kill -9 || true
 
-      - name: Verify Simulator state
-        shell: bash
-        run: |
-          xcrun simctl list devices | grep "$SIMULATOR_UDID" || true
-          xcrun simctl getenv "$SIMULATOR_UDID" HOME || true
-          open -a Simulator || true
-          sleep 5
-
       - name: Start Appium Server
         run: |
-          # 1. Tenta instalar apenas se não existir; se existir, tenta atualizar
-          # O "|| true" garante que o workflow continue mesmo se houver erro nesta etapa
-          npx appium driver install xcuitest || npx appium driver update xcuitest || true
+          # 1. Tenta atualizar o driver ignorando erros de versão major
+          npx appium driver update xcuitest --unsafe || true
           
-          # 2. Inicia o servidor em background usando npx (usa a versão local do projeto)
-          # Appium 2.x/3.x usa o path '/' por padrão
+          # 2. Inicia o servidor em background
           npx appium --port ${{ env.APPIUM_PORT }} --address 127.0.0.1 --log appium.log &
           
-          # 3. Aguarda o Appium ficar online (Health Check)
+          # 3. Aguarda o Appium ficar online (Versão compatível com macOS)
           echo "Aguardando Appium na porta ${{ env.APPIUM_PORT }}..."
-          timeout 60s bash -c 'until curl -s http://127.0.0.1:${{ env.APPIUM_PORT }}/status; do sleep 5; done'
-          echo "✅ Appium Server está pronto!"
+          for i in {1..20}; do
+            if curl -s http://127.0.0.1:${{ env.APPIUM_PORT }}/status > /dev/null; then
+              echo "✅ Appium Server está pronto!"
+              break
+            fi
+            echo "Aguardando..."
+            sleep 5
+          done
 
       - name: Run WDIO tests (iOS)
         shell: bash
