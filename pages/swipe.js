@@ -46,7 +46,7 @@ export default class SwipePage extends BasePage {
                 break;
 
             case "up":
-                startY = Math.floor(height * 0.85); // antes 0.75 (cai no card)
+                startY = Math.floor(height * 0.85);
                 endY = Math.floor(height * 0.20);
                 break;
 
@@ -59,7 +59,6 @@ export default class SwipePage extends BasePage {
                 throw new Error(`Direção de swipe inválida: ${direction}`);
         }
 
-        // 🔹 Android precisa de swipe vertical um pouco mais longo
         const moveDuration =
             driver.isAndroid && (direction === "up" || direction === "down")
                 ? 550

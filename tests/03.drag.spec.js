@@ -3,8 +3,11 @@ import DragPage from "../pages/drag.js";
 const drag = new DragPage();
 
 describe("Drag", () => {
-  it("Deve montar o Puzzle e concluir com sucesso", async () => {
+  before(async () => {
     await drag.open();
+  });
+
+  it("Deve montar o Puzzle e concluir com sucesso", async () => {
     await drag.solvePuzzle();
 
     await drag.successTitle.waitForDisplayed({ timeout: 15000 });

@@ -14,7 +14,6 @@ export default class BasePage {
   }
 
   async getAlertText(timeoutMs = 7000) {
-    // iOS (alert nativo)
     if (driver.isIOS) {
       try {
         await driver.waitUntil(
@@ -23,7 +22,7 @@ export default class BasePage {
               const text = await driver.getAlertText();
               return !!text && text.length > 0;
             } catch {
-              return false; // alerta ainda não existe
+              return false;
             }
           },
         );
@@ -33,7 +32,6 @@ export default class BasePage {
       }
     }
 
-    // Android (AlertDialog)
     if (driver.isAndroid) {
       try {
         const alertText = await $(
@@ -84,7 +82,6 @@ export default class BasePage {
       const el = await $(selector);
       if (await el.isDisplayed().catch(() => false)) return el;
 
-      // swipe para cima (scroll down)
       const { width, height } = await driver.getWindowRect();
       const startX = Math.floor(width * 0.5);
       const startY = Math.floor(height * 0.75);

@@ -11,6 +11,13 @@ export default class LoginPage extends BasePage {
     get inputPassword() { return $("~input-password"); }
     get btnLogin() { return $("~button-LOGIN"); }
 
+    get passwordMinLengthError() {
+        return driver.isIOS
+            ? $('//XCUIElementTypeStaticText[@name="Please enter at least 8 characters"]')
+            : $('//*[@text="Please enter at least 8 characters"]');
+
+    }
+    
     async open() {
         await this.home.goToLogin();
         await this.click(this.tabLogin);
@@ -25,16 +32,6 @@ export default class LoginPage extends BasePage {
         await this.type(this.inputEmail, email);
         await this.type(this.inputPassword, password);
         await this.click(this.btnLogin);
-    }
-
-    get passwordMinLengthError() {
-        if (driver.isIOS) {
-            return $('//XCUIElementTypeStaticText[@name="Please enter at least 8 characters"]');
-        }
-
-        if (driver.isAndroid) {
-            return $('//*[@text="Please enter at least 8 characters"]');
-        }
     }
 
 }

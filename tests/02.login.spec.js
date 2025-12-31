@@ -19,7 +19,7 @@ describe("Login", () => {
   });
 
   it("Validar login com senha menor que 8 caracteres", async () => {
-    await login.login("teste@qa.com", "123456"); // 6 caracteres
+    await login.login("teste@qa.com", "123456");
 
     await expect(login.passwordMinLengthError).toBeDisplayed();
     await expect(login.passwordMinLengthError).toHaveText("Please enter at least 8 characters");

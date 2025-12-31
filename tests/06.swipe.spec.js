@@ -3,9 +3,11 @@ import SwipePage from "../pages/swipe.js";
 const swipe = new SwipePage();
 
 describe("Swipe", () => {
-  it('Deve chegar no card através do texto informado', async () => {
+  before(async () => {
     await swipe.open();
+  });
 
+  it('Deve chegar no card através do texto informado', async () => {
     await swipe.swipeToCard("GREAT COMMUNITY", 3);
     let card = await swipe.cardTitleByText("GREAT COMMUNITY");
     await expect(card).toBeDisplayed();

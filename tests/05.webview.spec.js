@@ -3,6 +3,10 @@ import WebviewPage from "../pages/webview.js";
 const webview = new WebviewPage();
 
 describe("Webview", () => {
+    before(async () => {
+        await webview.open();
+    });
+
     it("Abrir Webview e validar conteúdo no contexto", async () => {
         await webview.open();
         await webview.switchToWebview(10000);

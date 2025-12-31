@@ -26,8 +26,8 @@ export default class FormsPage extends BasePage {
     }
 
     /**
-   * Seleciona uma opção do dropdown (funciona em iOS e Android)
-   * @param {string} value ex: "webdriver.io is awesome"
+   * Seleciona uma opção do dropdown
+   * @param {string} value
    */
     async selectDropdown(value) {
         if (driver.isIOS) {
@@ -57,8 +57,8 @@ export default class FormsPage extends BasePage {
     /**
      * Preenche todos os componentes do Forms
      * @param {string} text
-     * @param {boolean} switchOn (true = ligar)
-     * @param {string} dropdownValue (accessibilityId da opção)
+     * @param {boolean} switchOn
+     * @param {string} dropdownValue
      * @param {"Active"|"Inactive"} button
      */
     async fillForm(text, switchOn = true, dropdownValue = "webdriver.io is awesome", button = "Active") {

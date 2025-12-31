@@ -10,6 +10,12 @@ export default class SignupPage extends BasePage {
       : $('android=new UiSelector().text("Sign up")');
   }
 
+  get passwordDifferentError() {
+    return driver.isIOS
+      ? $('//XCUIElementTypeStaticText[@name="Please enter the same password"]')
+      : $('android=new UiSelector().text("Please enter the same password")');
+  }
+
   get inputEmail() { return $("~input-email"); }
   get inputPassword() { return $("~input-password"); }
   get inputConfirmPassword() { return $("~input-repeat-password"); }
@@ -27,11 +33,5 @@ export default class SignupPage extends BasePage {
     await this.type(this.inputPassword, password);
     await this.type(this.inputConfirmPassword, confirmPassword);
     await this.click(this.btnSignUp);
-  }
-
-  get passwordDifferentError() {
-    return driver.isIOS
-      ? $('//XCUIElementTypeStaticText[@name="Please enter the same password"]')
-      : $('android=new UiSelector().text("Please enter the same password")');
   }
 }

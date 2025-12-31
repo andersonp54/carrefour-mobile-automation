@@ -4,8 +4,8 @@ import HomePage from "./home.js";
 export default class DragPage extends BasePage {
     home = new HomePage();
 
-    get dragItem() { return $("~drag-l1"); }       // ajuste se o seu id mudar
-    get dropZone() { return $("~drop-l1"); }       // ajuste se o seu id mudar
+    get dragItem() { return $("~drag-l1"); }
+    get dropZone() { return $("~drop-l1"); }
     get successText() {
         return $('//*[contains(@name,"You made it") or contains(@text,"You made it") or contains(@label,"You made it")]');
     }
@@ -43,11 +43,11 @@ export default class DragPage extends BasePage {
     }
 
     drag(key) {
-        return $(`~drag-${key}`); // ex: key = "l1"
+        return $(`~drag-${key}`);
     }
 
     drop(key) {
-        return $(`~drop-${key}`); // ex: key = "l1"
+        return $(`~drop-${key}`);
     }
 
     get successTitle() {
@@ -62,9 +62,7 @@ export default class DragPage extends BasePage {
         return $('//*[contains(@name,"Retry") or contains(@label,"Retry") or contains(@text,"Retry")]');
     }
 
-    /**
-     * W3C drag (cross-platform)
-     */
+    
     async dragTo(sourceEl, targetEl) {
         await sourceEl.waitForDisplayed({ timeout: 15000 });
         await targetEl.waitForDisplayed({ timeout: 15000 });
@@ -99,7 +97,7 @@ export default class DragPage extends BasePage {
     }
 
     /**
-     * Monta o puzzle arrastando cada peça para seu alvo equivalente (mesmo sufixo).
+     * Monta o puzzle arrastando cada peça para seu alvo equivalente.
      */
     async solvePuzzle() {
         const keys = ["l1", "l2", "l3", "c1", "c2", "c3", "r1", "r2", "r3"];

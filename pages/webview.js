@@ -8,14 +8,12 @@ export default class WebviewPage extends BasePage {
         await this.home.goToWebview();
     }
 
-    /**
-     * Espera aparecer um contexto WEBVIEW e troca para ele
-     */
+
     async switchToWebview(timeoutMs = 30000) {
         const start = Date.now();
 
         while (Date.now() - start < timeoutMs) {
-            const contexts = await driver.getContexts(); // ex: ["NATIVE_APP", "WEBVIEW_1"]
+            const contexts = await driver.getContexts();
             const context = contexts.find((c) => c.includes("NATIVE_APP"))
 
             if (context) {

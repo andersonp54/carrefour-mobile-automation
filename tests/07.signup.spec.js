@@ -5,10 +5,11 @@ const signup = new SignupPage();
 const id = random8();
 
 describe("Sign up", async () => {
+  before(async () => {
+    await signup.open();
+  });
 
   it("Realizar cadastro com dados válidos", async () => {
-  await signup.open();
-
     await signup.signUp(
       `user.${id}@qa.com`,
       `${id}`,
