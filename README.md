@@ -5,6 +5,7 @@
 ![WebdriverIO](https://img.shields.io/static/v1?label=runner&message=webdriverio&color=red&style=for-the-badge&logo=webdriverio)
 ![Android](https://img.shields.io/static/v1?label=platform&message=android&color=green&style=for-the-badge&logo=android)
 ![iOS](https://img.shields.io/static/v1?label=platform&message=ios&color=black&style=for-the-badge&logo=apple)
+![Allure](https://img.shields.io/static/v1?label=report&message=allure&color=ff69b4&style=for-the-badge&logo=allure)
 
 ---
 
