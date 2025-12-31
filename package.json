@@ -5,8 +5,6 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "wdio": "wdio run ./wdio.conf.js",
     "test:android": "rm -rf reports/allure-results reports/allure-report; AVD_NAME=Medium_Phone_API_36.1 wdio run wdio.android.conf.js --spec ./tests/03.drag.spec.js; npx allure generate reports/allure-results --clean -o reports/allure-report",
     "test:ios": "rm -rf reports/allure-results reports/allure-report; wdio run ./wdio.ios.conf.js --spec ./tests/03.drag.spec.js; npx allure generate reports/allure-results --clean -o reports/allure-report",
     "test:ios:spec": "wdio run wdio.ios.conf.js --spec",
