@@ -17,53 +17,68 @@ export default class SwipePage extends BasePage {
         );
     }
 
-    async swipeLeft() {
-        const { width, height } = await driver.getWindowRect();
-        const y = Math.floor(height * 0.55);
-        const startX = Math.floor(width * 0.85);
-        const endX = Math.floor(width * 0.15);
-
-        await driver.performActions([{
-            type: "pointer",
-            id: "finger1",
-            parameters: { pointerType: "touch" },
-            actions: [
-                { type: "pointerMove", duration: 0, x: startX, y },
-                { type: "pointerDown", button: 0 },
-                { type: "pause", duration: 120 },
-                { type: "pointerMove", duration: 350, x: endX, y },
-                { type: "pointerUp", button: 0 }
-            ]
-        }]);
-        await driver.releaseActions();
+    async hiddenTextByContains(text) {
+        return $(
+            `//*[contains(@name,"${text}") or contains(@label,"${text}") or contains(@text,"${text}")]`
+        );
     }
 
     async swipe(direction = "left") {
         const { width, height } = await driver.getWindowRect();
-        const y = Math.floor(height * 0.55);
 
-        const startX =
-            direction === "left"
-                ? Math.floor(width * 0.85)
-                : Math.floor(width * 0.15);
+        const centerX = Math.floor(width * 0.5);
+        const centerY = Math.floor(height * 0.5);
 
-        const endX =
-            direction === "left"
-                ? Math.floor(width * 0.15)
-                : Math.floor(width * 0.85);
+        let startX = centerX;
+        let startY = centerY;
+        let endX = centerX;
+        let endY = centerY;
 
-        await driver.performActions([{
-            type: "pointer",
-            id: "finger1",
-            parameters: { pointerType: "touch" },
-            actions: [
-                { type: "pointerMove", duration: 0, x: startX, y },
-                { type: "pointerDown", button: 0 },
-                { type: "pause", duration: 120 },
-                { type: "pointerMove", duration: 350, x: endX, y },
-                { type: "pointerUp", button: 0 }
-            ]
-        }]);
+        switch (direction) {
+            case "left":
+                startX = Math.floor(width * 0.85);
+                endX = Math.floor(width * 0.15);
+                break;
+
+            case "right":
+                startX = Math.floor(width * 0.15);
+                endX = Math.floor(width * 0.85);
+                break;
+
+            case "up":
+                startY = Math.floor(height * 0.85); // antes 0.75 (cai no card)
+                endY = Math.floor(height * 0.20);
+                break;
+
+            case "down":
+                startY = Math.floor(height * 0.25);
+                endY = Math.floor(height * 0.75);
+                break;
+
+            default:
+                throw new Error(`Direção de swipe inválida: ${direction}`);
+        }
+
+        // 🔹 Android precisa de swipe vertical um pouco mais longo
+        const moveDuration =
+            driver.isAndroid && (direction === "up" || direction === "down")
+                ? 550
+                : 350;
+
+        await driver.performActions([
+            {
+                type: "pointer",
+                id: "finger1",
+                parameters: { pointerType: "touch" },
+                actions: [
+                    { type: "pointerMove", duration: 0, x: startX, y: startY },
+                    { type: "pointerDown", button: 0 },
+                    { type: "pause", duration: 120 },
+                    { type: "pointerMove", duration: moveDuration, x: endX, y: endY },
+                    { type: "pointerUp", button: 0 }
+                ]
+            }
+        ]);
 
         await driver.releaseActions();
         await browser.pause(250);
@@ -78,15 +93,33 @@ export default class SwipePage extends BasePage {
         const target = this.cardTitleByText(text);
 
         for (let i = 0; i < maxSwipes; i++) {
-            if (await target.isDisplayed()) return; // achou
+            if (await target.isDisplayed()) return;
             await this.swipe("left");
-            await browser.pause(250);
+            await browser.pause(500);
         }
 
         for (let i = 0; i < maxSwipes; i++) {
             if (await target.isDisplayed()) return;
             await this.swipe("right");
-            await browser.pause(250);
+            await browser.pause(500);
+        }
+
+        throw new Error(`Card com texto "${text}" não encontrado após ${maxSwipes} swipes`);
+    }
+
+    async swipeVerticalByText(text, maxSwipes = 10) {
+        const target = this.cardTitleByText(text);
+
+        for (let i = 0; i < maxSwipes; i++) {
+            if (await target.isDisplayed()) return;
+            await this.swipe("up");
+            await browser.pause(500);
+        }
+
+        for (let i = 0; i < maxSwipes; i++) {
+            if (await target.isDisplayed()) return;
+            await this.swipe("down");
+            await browser.pause(500);
         }
 
         throw new Error(`Card com texto "${text}" não encontrado após ${maxSwipes} swipes`);

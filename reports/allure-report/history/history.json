@@ -1,0 +1,1 @@
+{"c18602247c75a7344710cf68a993f16a":{"statistic":{"failed":0,"broken":1,"skipped":0,"passed":0,"unknown":0,"total":1},"items":[{"uid":"d990cfc4977b41ed","status":"broken","statusDetails":"element (\"~drag-l2\") still not displayed after 15000ms","time":{"start":1767194886263,"stop":1767194905571,"duration":19308}}]}}

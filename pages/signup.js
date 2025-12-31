@@ -4,7 +4,11 @@ import HomePage from "./home.js";
 export default class SignupPage extends BasePage {
   home = new HomePage();
 
-  get tabSignUp() { return $("~Sign up"); }
+  get tabSignUp() {
+    return driver.isIOS
+      ? $("~Sign up")
+      : $('android=new UiSelector().text("Sign up")');
+  }
 
   get inputEmail() { return $("~input-email"); }
   get inputPassword() { return $("~input-password"); }
@@ -14,15 +18,9 @@ export default class SignupPage extends BasePage {
 
   async open() {
     await this.home.goToLogin();
-    await this.click(this.tabSignUp);
+    await this.tabSignUp.click();
   }
 
-  // async signUp(email, password, confirmPassword) {
-  //   await this.type(this.inputEmail, email);
-  //   await this.type(this.inputPassword, password, 2000);
-  //   await this.type(this.inputConfirmPassword, confirmPassword, 2000);
-  //   await this.click(this.btnSignUp);
-  // }
 
   async signUp(email, password, confirmPassword) {
     await this.type(this.inputEmail, email);
@@ -32,6 +30,8 @@ export default class SignupPage extends BasePage {
   }
 
   get passwordDifferentError() {
-    return $('(//XCUIElementTypeStaticText[@name="Please enter the same password"])');
+    return driver.isIOS
+      ? $('//XCUIElementTypeStaticText[@name="Please enter the same password"]')
+      : $('android=new UiSelector().text("Please enter the same password")');
   }
 }

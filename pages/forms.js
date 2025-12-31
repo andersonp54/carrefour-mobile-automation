@@ -7,7 +7,7 @@ export default class FormsPage extends BasePage {
     get inputField() { return $("~text-input"); }
     get inputTextResult() { return $("~input-text-result"); }
 
-    get switchEl() { return $("~switch"); }
+    get switch() { return $("~switch"); }
     get switchText() { return $("~switch-text"); }
 
     get dropdown() { return $("~Dropdown"); }
@@ -30,11 +30,10 @@ export default class FormsPage extends BasePage {
    * @param {string} value ex: "webdriver.io is awesome"
    */
     async selectDropdown(value) {
-        await this.dropdownChevron.waitForDisplayed({ timeout: 5000 });
-        await this.dropdownChevron.click();
-
         if (driver.isIOS) {
-            // iOS: usa PickerWheel
+            await this.dropdownChevron.waitForDisplayed({ timeout: 5000 });
+            await this.dropdownChevron.click();
+
             await this.iosPickerWheel.waitForDisplayed({ timeout: 5000 });
             await this.iosPickerWheel.setValue(value);
 
@@ -43,7 +42,9 @@ export default class FormsPage extends BasePage {
 
         }
         else {
-            // Android: lista de opções (texto visível)
+            await this.dropdown.waitForDisplayed({ timeout: 5000 });
+            await this.dropdown.click();
+
             const androidOption = await $(`android=new UiSelector().text("${value}")`);
             await androidOption.waitForDisplayed({ timeout: 5000 });
             await androidOption.click();
@@ -68,16 +69,13 @@ export default class FormsPage extends BasePage {
         await expect(this.inputTextResult).toHaveText(text);
 
         if (switchOn) {
-            const current = await this.switchEl.getAttribute("value"); // iOS: 0/1
-            if (current === "0") {
-                await this.click(this.switchEl);
-            }
+            await this.switch.click();
+
             await this.waitForDisplayed(this.switchText, 5000);
             await expect(this.switchText).toHaveText("Click to turn the switch OFF");
         }
 
         await this.selectDropdown(dropdownValue);
-
 
         if (button.toLowerCase() === "inactive") {
             await this.click(this.btnInactive);

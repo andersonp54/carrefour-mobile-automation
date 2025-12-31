@@ -28,7 +28,13 @@ export default class LoginPage extends BasePage {
     }
 
     get passwordMinLengthError() {
-        return $('//XCUIElementTypeStaticText[@name="Please enter at least 8 characters"]');
+        if (driver.isIOS) {
+            return $('//XCUIElementTypeStaticText[@name="Please enter at least 8 characters"]');
+        }
+
+        if (driver.isAndroid) {
+            return $('//*[@text="Please enter at least 8 characters"]');
+        }
     }
 
 }

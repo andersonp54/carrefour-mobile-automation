@@ -14,21 +14,52 @@ export default class BasePage {
   }
 
   async getAlertText(timeoutMs = 7000) {
-    try {
-      await driver.waitUntil(
-        async () => (await driver.getAlertText())?.length > 0,
-        { timeout: timeoutMs, timeoutMsg: "Alert não apareceu" }
-      );
-      return await driver.getAlertText();
-    } catch {
-      return null;
+    // iOS (alert nativo)
+    if (driver.isIOS) {
+      try {
+        await driver.waitUntil(
+          async () => {
+            try {
+              const text = await driver.getAlertText();
+              return !!text && text.length > 0;
+            } catch {
+              return false; // alerta ainda não existe
+            }
+          },
+        );
+        return await driver.getAlertText();
+      } catch {
+        return null;
+      }
     }
+
+    // Android (AlertDialog)
+    if (driver.isAndroid) {
+      try {
+        const alertText = await $(
+          '//*[@resource-id="android:id/message"]'
+        );
+
+        await alertText.waitForDisplayed({ timeout: timeoutMs });
+        return await alertText.getText();
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
   }
 
-  async acceptAlert() {
-    try {
+  async acceptAlert(timeoutMs = 7000) {
+    if (driver.isIOS) {
       await driver.acceptAlert();
-    } catch {
+      return;
+    }
+
+    if (driver.isAndroid) {
+      const okButton = await $('//*[@resource-id="android:id/button1"]');
+      await okButton.waitForDisplayed({ timeout: timeoutMs });
+      await okButton.click();
     }
   }
 
@@ -45,37 +76,39 @@ export default class BasePage {
   }
 
   async scrollTextVisible(partialText, { maxSwipes = 8, timeout = 2000 } = {}) {
-  const selector = `-ios predicate string:type == "XCUIElementTypeStaticText" AND (name CONTAINS "${partialText}" OR label CONTAINS "${partialText}")`;
+    const selector = driver.isAndroid
+      ? `//*[contains(@text,'${partialText}') or contains(@content-desc,'${partialText}')]`
+      : `-ios predicate string:type == "XCUIElementTypeStaticText" AND (name CONTAINS "${partialText}" OR label CONTAINS "${partialText}")`;
 
-  for (let i = 0; i < maxSwipes; i++) {
-    const el = await $(selector);
-    if (await el.isDisplayed().catch(() => false)) return el;
+    for (let i = 0; i < maxSwipes; i++) {
+      const el = await $(selector);
+      if (await el.isDisplayed().catch(() => false)) return el;
 
-    // swipe para cima (scroll down)
-    const { width, height } = await driver.getWindowRect();
-    const startX = Math.floor(width * 0.5);
-    const startY = Math.floor(height * 0.75);
-    const endY   = Math.floor(height * 0.25);
+      // swipe para cima (scroll down)
+      const { width, height } = await driver.getWindowRect();
+      const startX = Math.floor(width * 0.5);
+      const startY = Math.floor(height * 0.75);
+      const endY = Math.floor(height * 0.25);
 
-    await driver.performActions([{
-      type: 'pointer',
-      id: 'finger1',
-      parameters: { pointerType: 'touch' },
-      actions: [
-        { type: 'pointerMove', duration: 0, x: startX, y: startY },
-        { type: 'pointerDown', button: 0 },
-        { type: 'pause', duration: 150 },
-        { type: 'pointerMove', duration: 500, x: startX, y: endY },
-        { type: 'pointerUp', button: 0 }
-      ]
-    }]);
+      await driver.performActions([{
+        type: 'pointer',
+        id: 'finger1',
+        parameters: { pointerType: 'touch' },
+        actions: [
+          { type: 'pointerMove', duration: 0, x: startX, y: startY },
+          { type: 'pointerDown', button: 0 },
+          { type: 'pause', duration: 150 },
+          { type: 'pointerMove', duration: 1000, x: startX, y: endY },
+          { type: 'pointerUp', button: 0 }
+        ]
+      }]);
 
-    await driver.releaseActions();
-    await driver.pause(timeout);
+      await driver.releaseActions();
+      await driver.pause(timeout);
+    }
+
+    throw new Error(`Texto contendo "${partialText}" não ficou visível após ${maxSwipes} scrolls`);
   }
-
-  throw new Error(`Texto contendo "${partialText}" não ficou visível após ${maxSwipes} scrolls`);
-}
 
   async expectTextVisible(partialText) {
     const el = await this.scrollTextVisible(partialText);

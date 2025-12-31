@@ -10,9 +10,8 @@ describe('Forms', () => {
 
         const alertText = await forms.getAlertText();
         expect(alertText).toBeTruthy();
-        expect(alertText).toContain("This button is");
         expect(alertText).toContain("This button is active");
 
-        await driver.acceptAlert();
+        await forms.acceptAlert();
     });
 });
