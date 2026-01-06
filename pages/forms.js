@@ -20,6 +20,10 @@ export default class FormsPage extends BasePage {
         return $('~Done');
     }
 
+    async isSwitchOn(element) {
+        const value = await element.getAttribute("value");
+        return value === "1" || value === 1 || value === "true";
+    }
 
     async open() {
         await this.home.goToForms();
@@ -68,12 +72,18 @@ export default class FormsPage extends BasePage {
         await this.waitForDisplayed(this.inputTextResult, 5000);
         await expect(this.inputTextResult).toHaveText(text);
 
+        const isOn = await this.isSwitchOn(this.switch);
         if (switchOn) {
             await this.switch.click();
 
             await this.waitForDisplayed(this.switchText, 5000);
             await expect(this.switchText).toHaveText("Click to turn the switch OFF");
+
+        } else if (!switchOn && isOn) {
+            await this.switch.click();
+            await expect(this.switchText).toHaveText("Click to turn the switch ON");
         }
+
 
         await this.selectDropdown(dropdownValue);
 

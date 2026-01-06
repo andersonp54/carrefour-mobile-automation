@@ -22,7 +22,7 @@ describe('Forms', () => {
     it('Cadastrar formulário com sucesso via JSON', async () => {
         const formData = JSON.parse(fs.readFileSync(path.resolve('tests/data/form.json'),'utf-8'));
 
-        await forms.fillForm(formData);
+        await forms.fillForm(formData.text, formData.switchOn, formData.dropdownValue, formData.button);
 
         const alertText = await forms.getAlertText();
         expect(alertText).toBeTruthy();

@@ -1,6 +1,6 @@
 {
-  "text": "Teste automation mobile",
-  "switchOn": true,
-  "dropdownValue": "webdriver.io is awesome",
+  "text": "Teste automation mobile File",
+  "switchOn": false,
+  "dropdownValue": "Appium is awesome",
   "button": "Active"
 }
