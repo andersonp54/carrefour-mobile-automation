@@ -1,18 +1,35 @@
 export default class BasePage {
+  /**
+   * Realiza o clique em um elemento após garantir que ele esteja visível
+   * @param {WebdriverIO.Element} element - Elemento que será clicado
+   */
   async click(element) {
     await element.waitForDisplayed({ timeout: 20000 });
     await element.click();
   }
 
+  /**
+   * Preenche um campo de texto aguardando o elemento ficar visível
+   * @param {WebdriverIO.Element} element - Campo de input
+   * @param {string} text - Texto a ser digitado
+   */
   async type(element, text) {
     await element.waitForDisplayed({ timeout: 20000 });
     await element.setValue(text);
   }
 
+  /**
+   * Verifica se um elemento está visível na tela
+   * @param {WebdriverIO.Element} element - Elemento a ser verificado
+   */
   async isVisible(element) {
     return element.isDisplayed();
   }
 
+  /**
+   * Obtém o texto exibido em um alerta (iOS ou Android)
+   * @param {number} timeoutMs - Tempo máximo de espera pelo alerta (ms)
+   */
   async getAlertText(timeoutMs = 7000) {
     if (driver.isIOS) {
       try {
@@ -48,6 +65,10 @@ export default class BasePage {
     return null;
   }
 
+   /**
+   * Aceita um alerta exibido na tela (iOS ou Android)
+   * @param {number} timeoutMs - Tempo máximo de espera pelo botão de confirmação
+   */
   async acceptAlert(timeoutMs = 7000) {
     if (driver.isIOS) {
       await driver.acceptAlert();
@@ -73,6 +94,14 @@ export default class BasePage {
     });
   }
 
+  /**
+   * Realiza scroll vertical até que um texto parcial fique visível
+   * Funciona tanto para Android quanto para iOS
+   * @param {string} partialText - Texto (ou parte dele) a ser encontrado
+   * @param {Object} options - Opções de scroll
+   * @param {number} options.maxSwipes - Quantidade máxima de tentativas de scroll
+   * @param {number} options.timeout - Tempo de pausa entre scrolls
+   */
   async scrollTextVisible(partialText, { maxSwipes = 8, timeout = 2000 } = {}) {
     const selector = driver.isAndroid
       ? `//*[contains(@text,'${partialText}') or contains(@content-desc,'${partialText}')]`
@@ -107,6 +136,11 @@ export default class BasePage {
     throw new Error(`Texto contendo "${partialText}" não ficou visível após ${maxSwipes} scrolls`);
   }
 
+  /**
+   * Garante que um texto esteja visível na tela, realizando scroll se necessário
+   * @param {string} partialText - Texto a ser validado
+   * @returns {Promise<WebdriverIO.Element>} Elemento visível
+   */
   async expectTextVisible(partialText) {
     const el = await this.scrollTextVisible(partialText);
     await expect(el).toBeDisplayed();

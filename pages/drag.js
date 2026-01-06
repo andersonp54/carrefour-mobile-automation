@@ -10,15 +10,20 @@ export default class DragPage extends BasePage {
         return $('//*[contains(@name,"You made it") or contains(@text,"You made it") or contains(@label,"You made it")]');
     }
 
+    /**
+     * Navega até a tela de Drag & Drop a partir da Home
+     */
     async open() {
         await this.home.goToDrag();
     }
 
+    /**
+     * Executa o gesto de drag and drop padrão
+     */
     async dragAndDrop() {
         await this.dragItem.waitForDisplayed({ timeout: 10000 });
         await this.dropZone.waitForDisplayed({ timeout: 10000 });
 
-        // gesto cross-platform usando performActions
         const from = await this.dragItem.getRect();
         const to = await this.dropZone.getRect();
 
@@ -42,36 +47,57 @@ export default class DragPage extends BasePage {
         await driver.releaseActions();
     }
 
+    /**
+     * Retorna dinamicamente um elemento de drag baseado na chave informada
+     * @param {string} key
+     */
     drag(key) {
         return $(`~drag-${key}`);
     }
 
+    /**
+     * Retorna dinamicamente uma zona de drop baseada na chave informada
+     * @param {string} key - Identificador do alvo (ex: l1, c2, r3)
+     */
     drop(key) {
         return $(`~drop-${key}`);
     }
 
+    /**
+     * Título exibido ao concluir o puzzle com sucesso
+     */
     get successTitle() {
         return $('//*[contains(@name,"Congratulations") or contains(@label,"Congratulations") or contains(@text,"Congratulations")]');
     }
 
+     /**
+     * Mensagem exibida após a conclusão correta do puzzle
+     */
     get successMessage() {
         return $('//*[contains(@name,"You made it") or contains(@label,"You made it") or contains(@text,"You made it")]');
     }
 
+    /**
+     * Botão exibido para tentar novamente o desafio
+     */
     get btnRetry() {
         return $('//*[contains(@name,"Retry") or contains(@label,"Retry") or contains(@text,"Retry")]');
     }
 
-    
-    async dragTo(sourceEl, targetEl) {
-        await sourceEl.waitForDisplayed({ timeout: 15000 });
-        await targetEl.waitForDisplayed({ timeout: 15000 });
+    /**
+     * Executa drag and drop entre dois elementos informados
+     * @param {WebdriverIO.Element} sourceElement - Elemento de origem
+     * @param {WebdriverIO.Element} targetElement - Elemento de destino
+     */
+    async dragTo(sourceElement, targetElement) {
+        await sourceElement.waitForDisplayed({ timeout: 15000 });
+        await targetElement.waitForDisplayed({ timeout: 15000 });
 
-        const fromLoc = await sourceEl.getLocation();
-        const fromSize = await sourceEl.getSize();
+        const fromLoc = await sourceElement.getLocation();
+        const fromSize = await sourceElement.getSize();
 
-        const toLoc = await targetEl.getLocation();
-        const toSize = await targetEl.getSize();
+        const toLoc = await targetElement.getLocation();
+        const toSize = await targetElement.getSize();
 
         const startX = Math.floor(fromLoc.x + fromSize.width / 2);
         const startY = Math.floor(fromLoc.y + fromSize.height / 2);

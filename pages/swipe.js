@@ -7,22 +7,38 @@ export default class SwipePage extends BasePage {
     get screen() { return $("~Swipe-screen"); } // se não existir, removemos
     get endMessage() { return $('//*[contains(@name,"You found me")]'); } // robusto iOS/Android
 
-    async open() {
-        await this.home.goToSwipe();
-    }
 
+    /**
+     * Retorna um card pelo texto exibido em seu título
+     * @param {string} text - Texto (ou parte dele) do card
+     */
     cardTitleByText(text) {
         return $(
             `//*[contains(@name,"${text}") or contains(@label,"${text}") or contains(@text,"${text}")]`
         );
     }
 
+    /**
+     * Retorna um texto oculto pelo conteúdo parcial informado
+     * @param {string} text - Texto (ou parte dele) a ser localizado
+     */
     async hiddenTextByContains(text) {
         return $(
             `//*[contains(@name,"${text}") or contains(@label,"${text}") or contains(@text,"${text}")]`
         );
     }
 
+    /**
+     * Navega até a tela de Swipe a partir da Home
+     */
+    async open() {
+        await this.home.goToSwipe();
+    }
+
+    /**
+     * Executa um gesto de swipe na direção informada
+     * @param {"left"|"right"|"up"|"down"} direction 
+     */
     async swipe(direction = "left") {
         const { width, height } = await driver.getWindowRect();
 
@@ -84,9 +100,9 @@ export default class SwipePage extends BasePage {
     }
 
     /**
-     * Faz swipe até encontrar um card que contenha o texto informado.
-     * @param {string} text exemplo: "GREAT COMMUNITY"
-     * @param {{maxSwipes?: number}} opts
+     * Realiza swipe horizontal até encontrar um card contendo o texto informado
+     * @param {string} text - Texto esperado no card
+     * @param {number} maxSwipes - Número máximo de tentativas
      */
     async swipeToCard(text, maxSwipes = 10) {
         const target = this.cardTitleByText(text);
@@ -106,6 +122,11 @@ export default class SwipePage extends BasePage {
         throw new Error(`Card com texto "${text}" não encontrado após ${maxSwipes} swipes`);
     }
 
+    /**
+     * Realiza swipe vertical até encontrar um card contendo o texto informado
+     * @param {string} text - Texto esperado no card
+     * @param {number} maxSwipes - Número máximo de tentativas
+     */
     async swipeVerticalByText(text, maxSwipes = 10) {
         const target = this.cardTitleByText(text);
 

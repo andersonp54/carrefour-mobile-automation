@@ -1,12 +1,12 @@
 {
   "name": "carrefour-mobile-automation",
   "version": "1.0.0",
-  "description": "",
+  "description": "Desafio de Automação de Testes Mobile (Carrefour)",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test:android": "rm -rf reports/allure-results reports/allure-report; AVD_NAME=Medium_Phone_API_36.1 wdio run wdio.android.conf.js --spec ./tests/03.drag.spec.js; npx allure generate reports/allure-results --clean -o reports/allure-report",
-    "test:ios": "rm -rf reports/allure-results reports/allure-report; wdio run ./wdio.ios.conf.js --spec ./tests/03.drag.spec.js; npx allure generate reports/allure-results --clean -o reports/allure-report",
+    "test:android": "rm -rf reports/allure-results reports/allure-report; AVD_NAME=Medium_Phone_API_36.1 wdio run wdio.android.conf.js --spec; npx allure generate reports/allure-results --clean -o reports/allure-report",
+    "test:ios": "rm -rf reports/allure-results reports/allure-report; wdio run ./wdio.ios.conf.js --spec; npx allure generate reports/allure-results --clean -o reports/allure-report",
     "test:ios:spec": "wdio run wdio.ios.conf.js --spec",
     "emulator:android": "emulator -avd Medium_Phone_API_36.1",
     "test:android:spec": "AVD_NAME=Medium_Phone_API_36.1 wdio run wdio.android.conf.js --spec",
@@ -14,7 +14,7 @@
     "allure:open": "npx allure open reports/allure-report"
   },
   "keywords": [],
-  "author": "",
+  "author": "Anderson Patricio",
   "license": "ISC",
   "devDependencies": {
     "@wdio/allure-reporter": "^9.22.0",

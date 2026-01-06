@@ -55,11 +55,11 @@ export default class FormsPage extends BasePage {
 
 
     /**
-     * Preenche todos os componentes do Forms
-     * @param {string} text
-     * @param {boolean} switchOn
-     * @param {string} dropdownValue
-     * @param {"Active"|"Inactive"} button
+     * Preenche todos os componentes do formulário
+     * @param {string} text - Texto a ser digitado no input
+     * @param {boolean} switchOn - Define se o switch será ativado
+     * @param {string} dropdownValue - Valor selecionado no dropdown
+     * @param {"Active"|"Inactive"} button - Botão a ser acionado
      */
     async fillForm(text, switchOn = true, dropdownValue = "webdriver.io is awesome", button = "Active") {
 

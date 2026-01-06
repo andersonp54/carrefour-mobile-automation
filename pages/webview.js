@@ -4,11 +4,18 @@ import HomePage from "./home.js";
 export default class WebviewPage extends BasePage {
     home = new HomePage();
 
+    /**
+     * Navega até a tela de Webview a partir da Home
+     */
     async open() {
         await this.home.goToWebview();
     }
 
 
+    /**
+     * Aguarda e realiza a troca de contexto para Webview
+     * @param {number} timeoutMs - Tempo máximo de espera pela Webview (ms)
+     */
     async switchToWebview(timeoutMs = 30000) {
         const start = Date.now();
 
